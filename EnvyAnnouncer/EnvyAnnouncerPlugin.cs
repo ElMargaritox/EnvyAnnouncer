@@ -14,51 +14,23 @@ namespace EnvyAnnouncer
     public class EnvyAnnouncerPlugin : RocketPlugin<EnvyAnnouncerConfiguration>
     {
         public static EnvyAnnouncerPlugin Instance;
-        private int contador;
-        private Timer timer;
+        private MessageController messageController;
         protected override void Load()
         {
             Instance = this;
-            contador = 0;
-
-            timer = new Timer(1000 * Configuration.Instance.Time); timer.Elapsed += Timer_Elapsed; timer.AutoReset = true; timer.Start();
+            messageController = new MessageController();
+            
         }
 
-        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+
+
+        public static void MandarMensaje(string message, string icon)
         {
-           
-
-
-            if (Configuration.Instance.RandomizeMessages)
-            {
-                Message message = Configuration.Instance.Messages.RandomOrDefault();
-                ChatManager.serverSendMessage(message.Content.Replace('(', '<').Replace(')', '>'), Color.white, null, null, EChatMode.GLOBAL, message.Icon, true);
-                if (Configuration.Instance.ShowInConsole) Console.WriteLine(message.Content);
-            }
-            else
-            {
-                try
-                {
-                    Message message = Configuration.Instance.Messages[contador];
-                    ChatManager.serverSendMessage(message.Content.Replace('(', '<').Replace(')', '>'), Color.white, null, null, EChatMode.GLOBAL, message.Icon, true);
-
-
-                    if (Configuration.Instance.ShowInConsole) Console.WriteLine(message.Content);
-                    contador++;
-                }
-                catch
-                {
-                    contador = 0;
-                }
-                
-            }
+            ChatManager.serverSendMessage(message.Replace('(', '<').Replace(')', '>'), Color.white, null, null, EChatMode.GLOBAL, icon, true);
         }
-
-
         protected override void Unload()
         {
-            timer.Stop(); timer.Elapsed -= Timer_Elapsed; timer.Dispose();
-            contador = 0;
+            messageController.Dispose();
         }
     }
 }
