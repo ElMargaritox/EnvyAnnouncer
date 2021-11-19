@@ -1,14 +1,17 @@
 ﻿using EnvyAnnouncer.Models;
+using Rocket.Core.Utils;
+using SDG.Unturned;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using UnityEngine;
 
 namespace EnvyAnnouncer
 {
-    public class MessageController : IDisposable
+    public class MessageController : MonoBehaviour, IDisposable
     {
         private Timer timer;
         private int contador;
@@ -28,31 +31,34 @@ namespace EnvyAnnouncer
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (EnvyAnnouncerPlugin.Instance.Configuration.Instance.RandomizeMessages)
+            TaskDispatcher.QueueOnMainThread(() =>
             {
-                int numero = new Random().Next(0, EnvyAnnouncerPlugin.Instance.Configuration.Instance.Messages.Count);
-                Message message = EnvyAnnouncerPlugin.Instance.Configuration.Instance.Messages.ElementAt(numero);
-                EnvyAnnouncerPlugin.MandarMensaje(message.Content, message.Icon);
-                if (EnvyAnnouncerPlugin.Instance.Configuration.Instance.ShowInConsole) Rocket.Core.Logging.Logger.Log(message.Content);
-            }
-            else
-            {
-                try
+                if (EnvyAnnouncerPlugin.Instance.Configuration.Instance.RandomizeMessages)
                 {
-                    Message message = EnvyAnnouncerPlugin.Instance.Configuration.Instance.Messages[contador];
+                    int numero = new System.Random().Next(0, EnvyAnnouncerPlugin.Instance.Configuration.Instance.Messages.Count);
+                    Message message = EnvyAnnouncerPlugin.Instance.Configuration.Instance.Messages.ElementAt(numero);
                     if (EnvyAnnouncerPlugin.Instance.Configuration.Instance.ShowInConsole) Rocket.Core.Logging.Logger.Log(message.Content);
-
-                    EnvyAnnouncerPlugin.MandarMensaje(message.Content, message.Icon);
-
-
-                    contador++;
                 }
-                catch
+                else
                 {
-                    contador = 0;
-                }
+                    try
+                    {
+                        Message message = EnvyAnnouncerPlugin.Instance.Configuration.Instance.Messages[contador];
+                        if (EnvyAnnouncerPlugin.Instance.Configuration.Instance.ShowInConsole) Rocket.Core.Logging.Logger.Log(message.Content);
 
-            }
+                        ChatManager.serverSendMessage(message.Content.Replace('(', '<').Replace(')', '>'), Color.white, null, null, EChatMode.GLOBAL, message.Icon, true);
+                        contador++;
+                    }
+                    catch
+                    {
+                        contador = 0;
+                    }
+
+                }
+            });
+            
         }
+
+
     }
 }
